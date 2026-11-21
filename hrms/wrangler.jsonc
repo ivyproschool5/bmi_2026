@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ivy-hrms",
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "observability": { "enabled": true },
+  // File storage for employee documents. Create it once with: npx wrangler r2 bucket create ivy-hrms-docs
+  "r2_buckets": [{ "binding": "DOCS", "bucket_name": "ivy-hrms-docs" }],
+  // Month-end / daily jobs (leave reminders etc.) - wired up in Phase 1
+  "vars": {
+    "APP_NAME": "Ivy HRMS",
+    "ALLOW_SIGNUP": "true",
+    "EMAIL_FROM": "Ivy HRMS <hr@example.com>",
+    "AI_MODEL": "meta/llama-3.3-70b-instruct",
+    // Leave empty for NVIDIA directly, or set to a Cloudflare AI Gateway URL
+    "AI_BASE_URL": ""
+  }
+  // Secrets (set with `npx wrangler secret put NAME`, and in .dev.vars locally):
+  //   DATABASE_URL        Neon connection string
+  //   BETTER_AUTH_SECRET  random 32+ char string
+  //   RESEND_API_KEY      optional; without it emails are only logged
+  //   NVIDIA_API_KEY      optional; without it the HR assistant is switched off
+}

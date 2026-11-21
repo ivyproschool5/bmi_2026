@@ -1,0 +1,23 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-sky: #1a98cb;
+  --color-sky-dark: #1580ab;
+  --color-sky-light: #e8f5fb;
+  --color-deep: #0b5394;
+  --color-amber: #f7a61b;
+  --color-amber-light: #fef3dd;
+  --font-heading: 'Montserrat', system-ui, sans-serif;
+  --font-sans: 'Poppins', system-ui, sans-serif;
+}
+
+body {
+  background: #ffffff;
+  color: #1f2937;
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  color: var(--color-deep);
+}

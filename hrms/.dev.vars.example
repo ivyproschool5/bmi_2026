@@ -1,0 +1,5 @@
+DATABASE_URL=postgres://hrms:hrms@127.0.0.1:5432/hrms
+BETTER_AUTH_SECRET=change-me-to-a-long-random-string-at-least-32-chars
+BETTER_AUTH_URL=http://localhost:5173
+RESEND_API_KEY=
+NVIDIA_API_KEY=
