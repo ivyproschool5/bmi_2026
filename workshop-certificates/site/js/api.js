@@ -136,7 +136,7 @@
     if (action === 'workshop') {
       var w = db.workshops.filter(function (x) { return x.code === String(d.code || '').toUpperCase(); })[0];
       if (!w) return fail('We could not find this workshop. Please check the link or scan the QR code again.', 'not_found');
-      var qs = w.bank === 'NONE' ? [] : (DEMO_BANK[w.bank] || []);
+      var qs = w.bank === 'NONE' ? [] : ((db.banks || {})[w.bank] || DEMO_BANK[w.bank] || []);
       var st = wsState(w);
       return {
         ok: true,
@@ -157,7 +157,7 @@
       var existing = db.certs.filter(function (x) { return x.code === ws.code && x.email === email; })[0];
       if (existing) return { ok: true, alreadyIssued: true, result: { outcome: existing.type }, certificate: pubCert(existing) };
       var has = ws.bank !== 'NONE';
-      var bank = has ? DEMO_BANK[ws.bank] : [];
+      var bank = has ? ((db.banks || {})[ws.bank] || DEMO_BANK[ws.bank] || []) : [];
       var score = 0;
       for (var i = 0; i < bank.length; i++) {
         var a = d.answers[bank[i].id];
@@ -187,7 +187,18 @@
     }
     if (action === 'admin.ping') return { ok: true, version: 'demo' };
     if (action === 'admin.banks') {
-      return { ok: true, banks: Object.keys(DEMO_BANK).map(function (k) { return { id: k, count: DEMO_BANK[k].length, topics: DEMO_BANK[k].map(function (q) { return q.topic; }) }; }) };
+      var all = Object.assign({}, DEMO_BANK, db.banks || {});
+      return { ok: true, banks: Object.keys(all).map(function (k) { return { id: k, title: k === 'DEMO-GENAI' ? 'Demo questions' : k, count: all[k].length, seed: k === 'DEMO-GENAI', topics: all[k].map(function (q) { return q.topic; }).filter(Boolean) }; }) };
+    }
+    if (action === 'admin.getBank') {
+      var qsb = (db.banks || {})[d.id] || DEMO_BANK[d.id];
+      return qsb ? { ok: true, bank: { id: d.id, title: d.id, questions: qsb } } : fail('Question bank not found.');
+    }
+    if (action === 'admin.saveBank') {
+      db.banks = db.banks || {};
+      db.banks[d.bank.id] = d.bank.questions.map(function (q, i) { return { id: 'q' + (i + 1), topic: q.topic, text: q.text, options: q.options, correct: q.correct }; });
+      demoSave(db);
+      return { ok: true, bank: { id: d.bank.id, title: d.bank.title, questions: db.banks[d.bank.id] } };
     }
     if (action === 'admin.createWorkshop') {
       var nw = d.workshop || {};
@@ -215,7 +226,7 @@
     if (action === 'admin.stats') {
       var sw = db.workshops.filter(function (x) { return x.code === d.code; })[0];
       if (!sw) return fail('Workshop not found.');
-      var qsBank = sw.bank === 'NONE' ? [] : DEMO_BANK[sw.bank];
+      var qsBank = sw.bank === 'NONE' ? [] : ((db.banks || {})[sw.bank] || DEMO_BANK[sw.bank] || []);
       var people = {}, order = [];
       db.submissions.filter(function (s) { return s.code === sw.code; }).forEach(function (s) {
         var p = people[s.email];

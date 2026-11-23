@@ -93,6 +93,7 @@
     <nav class="nav" id="nav" hidden>
       <button data-tab="new" aria-current="page">New workshop</button>
       <button data-tab="list">My workshops</button>
+      <button data-tab="banks">Question banks</button>
       <span class="spacer"></span>
       <button id="lockBtn">Lock</button>
     </nav>
@@ -106,7 +107,7 @@
     <form class="card" id="gateForm" style="max-width:520px" novalidate>
       <div class="eyebrow">Sign in</div>
       <h2>Enter the admin key</h2>
-      <p class="muted">The key is shown when you run setup in the Google Sheet (Ivy Certificates menu, Show admin key). It is saved in this browser only.</p>
+      <p class="muted">Use the admin key you were given at setup. It is saved in this browser only, so you enter it once per device.</p>
       <div class="field">
         <label for="adminKey">Admin key</label>
         <input type="password" id="adminKey" autocomplete="current-password" required>
@@ -155,7 +156,7 @@
       <div class="field">
         <label for="bank">Question bank</label>
         <select id="bank"></select>
-        <div class="hint">Questions live in the "Question Bank" tab of the Google Sheet. Add a new Bank ID there to create a new set.</div>
+        <div class="hint">Create or edit question sets in the Question banks tab. Each workshop keeps a copy of its questions, so later edits never change a workshop already created.</div>
       </div>
       <div class="row2" id="scoringRow">
         <div class="field">
@@ -186,6 +187,52 @@
     </div>
     <div class="alert alert-error" id="listError" hidden></div>
     <div class="ws-list" id="wsList"><div class="spinner"></div></div>
+  </section>
+
+  <!-- Question banks -->
+  <section id="tab-banks" hidden>
+    <div id="bankListView">
+      <div class="actions split" style="margin-bottom:14px;align-items:center">
+        <h2 style="margin:0">Question banks</h2>
+        <button class="btn btn-amber" id="newBankBtn">New question bank</button>
+      </div>
+      <div class="alert alert-error" id="bankListError" hidden></div>
+      <div class="ws-list" id="bankList"><div class="spinner"></div></div>
+    </div>
+    <form class="card" id="bankForm" hidden novalidate>
+      <div class="actions split" style="align-items:center;margin-bottom:8px">
+        <div><div class="eyebrow" id="bankFormEyebrow">New question bank</div><h2 style="margin:0" id="bankFormTitle">Add questions</h2></div>
+        <button class="btn btn-ghost" type="button" id="bankCancel">Back</button>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="bankId">Bank ID</label>
+          <input type="text" id="bankId" maxlength="40" placeholder="e.g. PROMPT-BASICS" autocapitalize="characters" required>
+          <div class="hint">Capital letters, numbers and hyphens. Shown in the workshop form.</div>
+        </div>
+        <div class="field">
+          <label for="bankTitle">Title</label>
+          <input type="text" id="bankTitle" maxlength="100" placeholder="e.g. Prompt engineering basics">
+        </div>
+      </div>
+      <div class="field">
+        <label for="bankText">Questions</label>
+        <textarea id="bankText" rows="16" spellcheck="true" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;min-height:320px" placeholder="1. What does it mean when an AI tool hallucinates?
+Topic: Basics
+A) It refuses to answer
+B) It gives confident but incorrect information *
+C) It runs slowly
+D) It repeats the prompt
+
+2. Next question...
+A) ...
+B) ... *"></textarea>
+        <div class="hint">One question per block. Options start with A) B) C) D). Put a <b>*</b> at the end of the correct option. "Topic:" is optional. You can paste straight from Word, Notes or an email.</div>
+      </div>
+      <div id="bankPreview"></div>
+      <div class="alert alert-error" id="bankError" hidden></div>
+      <button class="btn btn-amber" type="submit" id="bankSave">Save question bank</button>
+    </form>
   </section>
 
   <!-- Results -->
@@ -259,7 +306,7 @@
   function lock() { var s = ls(); if (s) s.removeItem(KEY_STORE); key = ''; showGate(); }
   function showGate() {
     $('nav').hidden = true;
-    ['tab-new', 'tab-list', 'tab-results'].forEach(function (id) { $(id).hidden = true; });
+    ['tab-new', 'tab-list', 'tab-results', 'tab-banks'].forEach(function (id) { $(id).hidden = true; });
     $('gate').hidden = false;
     $('adminKey').value = api.isDemo ? 'demo' : '';
     $('adminKey').focus();
@@ -292,7 +339,9 @@
     $('tab-new').hidden = name !== 'new';
     $('tab-list').hidden = name !== 'list';
     $('tab-results').hidden = name !== 'results';
+    $('tab-banks').hidden = name !== 'banks';
     if (name === 'list') loadList();
+    if (name === 'banks') showBankList();
   }
   document.querySelectorAll('#nav [data-tab]').forEach(function (b) { b.addEventListener('click', function () { tab(b.getAttribute('data-tab')); }); });
 
@@ -309,7 +358,7 @@
     api.admin('banks', key).then(function (res) {
       if (!res.ok) { sel.innerHTML = '<option value="NONE">No assessment (feedback and participation certificate)</option>'; return toast(res.error); }
       sel.innerHTML = res.banks.map(function (b) {
-        return '<option value="' + U.esc(b.id) + '"' + (b.count ? '' : ' disabled') + '>' + U.esc(b.id) + ' (' + b.count + ' questions' + (b.topics.length ? ': ' + U.esc(b.topics.slice(0, 4).join(', ')) : '') + ')</option>';
+        return '<option value="' + U.esc(b.id) + '"' + (b.count ? '' : ' disabled') + '>' + U.esc(b.title || b.id) + ' (' + b.count + ' questions)</option>';
       }).join('') + '<option value="NONE">No assessment (feedback and participation certificate)</option>';
       syncScoring();
     });
@@ -529,6 +578,129 @@
       }).join(',');
     }).join('\r\n');
     Cert.saveBlob(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }), 'Ivy-results-' + lastStats.workshop.code + '.csv');
+  });
+
+
+  /* ---------- question banks ---------- */
+  var editingBank = null;
+  function showBankList() {
+    $('bankForm').hidden = true; $('bankListView').hidden = false;
+    err('bankListError');
+    $('bankList').innerHTML = '<div class="spinner"></div>';
+    api.admin('banks', key).then(function (res) {
+      if (!res.ok) { $('bankList').innerHTML = ''; return err('bankListError', res.error); }
+      $('bankList').innerHTML = res.banks.map(function (b) {
+        return '<div class="ws"><div><h3>' + U.esc(b.title || b.id) + (b.seed ? '<span class="pill closed">Starter draft</span>' : '') + '</h3>'
+          + '<div class="meta"><span class="code">' + U.esc(b.id) + '</span>  ·  ' + b.count + ' questions' + (b.topics.length ? '  ·  ' + U.esc(b.topics.join(', ')) : '') + '</div></div>'
+          + '<div class="btns"><button class="btn btn-primary" data-bank="' + U.esc(b.id) + '">View or edit</button></div></div>';
+      }).join('') || '<div class="card muted">No question banks yet.</div>';
+    });
+  }
+  $('bankList').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-bank]');
+    if (!b) return;
+    b.disabled = true;
+    api.admin('getBank', key, { id: b.getAttribute('data-bank') }).then(function (res) {
+      b.disabled = false;
+      if (!res.ok) return toast(res.error);
+      openBankForm(res.bank);
+    });
+  });
+  $('newBankBtn').addEventListener('click', function () { openBankForm(null); });
+  $('bankCancel').addEventListener('click', showBankList);
+
+  function openBankForm(bank) {
+    editingBank = bank;
+    $('bankListView').hidden = true; $('bankForm').hidden = false;
+    $('bankFormEyebrow').textContent = bank ? 'Edit question bank' : 'New question bank';
+    $('bankFormTitle').textContent = bank ? (bank.title || bank.id) : 'Add questions';
+    $('bankId').value = bank ? bank.id : '';
+    $('bankTitle').value = bank ? (bank.title || '') : '';
+    $('bankText').value = bank ? bankToText(bank.questions) : '';
+    err('bankError');
+    renderBankPreview();
+    window.scrollTo(0, 0);
+  }
+
+  function bankToText(qs) {
+    return qs.map(function (q, i) {
+      var lines = [(i + 1) + '. ' + q.text];
+      if (q.topic) lines.push('Topic: ' + q.topic);
+      q.options.forEach(function (o, j) { lines.push('ABCD'.charAt(j) + ') ' + o + (j === q.correct ? ' *' : '')); });
+      return lines.join('\n');
+    }).join('\n\n');
+  }
+
+  /* Parses the plain-text format. Returns { questions, problems }. */
+  function parseBankText(text) {
+    var questions = [], problems = [], cur = null;
+    var CORRECT = /\s*(\*|\(correct\)|\[correct\]|✓|✔)\s*$/i;
+    String(text || '').replace(/\r/g, '').split('\n').forEach(function (raw) {
+      var t = raw.replace(/ /g, ' ').trim();
+      if (!t) { if (cur && cur.options.length) cur.closed = true; return; }
+      var topic = /^topic\s*[:\-]\s*(.+)$/i.exec(t);
+      if (topic && cur) { cur.topic = topic[1].trim(); return; }
+      var opt = /^\(?([A-Da-d])\s*[\).:\-]\s+(.+)$/.exec(t);
+      if (opt && cur && !cur.closed) {
+        var body = opt[2], isRight = CORRECT.test(body);
+        body = body.replace(CORRECT, '').trim();
+        if (isRight) cur.correct.push(cur.options.length);
+        cur.options.push(body);
+        return;
+      }
+      var answerLine = /^(answer|correct( answer)?|ans)\s*[:\-]\s*\(?([A-Da-d])\)?\s*$/i.exec(t);
+      if (answerLine && cur) { cur.correct = ['abcd'.indexOf(answerLine[3].toLowerCase())]; return; }
+      if (cur && !cur.options.length && !cur.closed) { cur.text += ' ' + t; return; }
+      cur = { text: t.replace(/^(q(uestion)?\s*)?\d+\s*[\).:\-]\s*/i, '').replace(/^q\s*[:\-]\s*/i, ''), topic: '', options: [], correct: [], closed: false };
+      questions.push(cur);
+    });
+    var out = questions.map(function (q, i) {
+      var n = i + 1;
+      if (q.options.length < 2) problems.push('Question ' + n + ' has fewer than 2 options.');
+      if (q.options.length > 4) problems.push('Question ' + n + ' has more than 4 options.');
+      if (q.correct.length === 0) problems.push('Question ' + n + ' has no correct option marked with *.');
+      if (q.correct.length > 1) problems.push('Question ' + n + ' has more than one option marked correct.');
+      return { text: q.text, topic: q.topic, options: q.options, correct: q.correct.length === 1 ? q.correct[0] : -1 };
+    });
+    if (!out.length) problems.push('No questions found yet.');
+    return { questions: out, problems: problems };
+  }
+
+  function renderBankPreview() {
+    var parsed = parseBankText($('bankText').value);
+    var html = '<div class="card" style="background:var(--soft);box-shadow:none"><div class="eyebrow">Preview</div><h3 style="margin-bottom:10px">' + parsed.questions.length + ' question' + (parsed.questions.length === 1 ? '' : 's') + ' found</h3>';
+    if (parsed.problems.length && $('bankText').value.trim()) html += '<div class="alert alert-note">' + parsed.problems.map(U.esc).join('<br>') + '</div>';
+    html += parsed.questions.map(function (q, i) {
+      return '<div style="margin:0 0 14px"><b>' + (i + 1) + '. ' + U.esc(q.text) + '</b>' + (q.topic ? ' <span class="muted small">(' + U.esc(q.topic) + ')</span>' : '')
+        + '<div class="small">' + q.options.map(function (o, j) {
+          return '<div style="padding:2px 0' + (j === q.correct ? ';color:var(--ok);font-weight:600' : '') + '">' + 'ABCD'.charAt(j) + ') ' + U.esc(o) + (j === q.correct ? '  ✓ correct' : '') + '</div>';
+        }).join('') + '</div></div>';
+    }).join('');
+    $('bankPreview').innerHTML = html + '</div>';
+    return parsed;
+  }
+  var previewTimer;
+  $('bankText').addEventListener('input', function () { clearTimeout(previewTimer); previewTimer = setTimeout(renderBankPreview, 250); });
+  $('bankId').addEventListener('input', function () { var p = this.selectionStart; this.value = this.value.toUpperCase().replace(/\s+/g, '-').replace(/[^A-Z0-9-]/g, ''); this.setSelectionRange(p, p); });
+
+  $('bankForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    err('bankError');
+    var parsed = renderBankPreview();
+    var id = $('bankId').value.trim();
+    if (!/^[A-Z0-9][A-Z0-9-]{2,39}$/.test(id)) { err('bankError', 'Bank ID must be 3 to 40 characters: capital letters, numbers and hyphens.'); return $('bankId').focus(); }
+    if (parsed.problems.length) { err('bankError', 'Fix the items listed in the preview, then save.'); return; }
+    if ((!editingBank || editingBank.id !== id) && Array.prototype.some.call($('bank').options, function (o) { return o.value === id; })) {
+      if (!confirm('A question bank called ' + id + ' already exists. Replace it?')) return;
+    }
+    var btn = $('bankSave'); btn.disabled = true; btn.textContent = 'Saving...';
+    api.admin('saveBank', key, { bank: { id: id, title: $('bankTitle').value.trim(), questions: parsed.questions } }).then(function (res) {
+      btn.disabled = false; btn.textContent = 'Save question bank';
+      if (!res.ok) return err('bankError', res.error);
+      toast('Saved ' + res.bank.id + ' with ' + res.bank.questions.length + ' questions.');
+      loadBanks();
+      showBankList();
+    });
   });
 
   /* ---------- boot ---------- */

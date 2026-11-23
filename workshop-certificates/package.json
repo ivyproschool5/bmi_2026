@@ -1,12 +1,16 @@
 {
   "name": "ivy-workshop-certificates",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "description": "QR-based post-workshop assessment and certificate system for Ivy Professional School",
+  "engines": { "node": "22.x" },
   "scripts": {
     "test": "node --test tests/",
     "e2e": "node tests/e2e.js tests/out",
     "serve": "node tests/local-server.js 8787"
+  },
+  "dependencies": {
+    "@vercel/blob": "2.8.2"
   },
   "license": "UNLICENSED"
 }

@@ -1,14 +1,14 @@
 /*
  * Ivy Workshop Certificates - site settings
- * Edit this file once after deploying the Apps Script web app.
+ * The only file you normally need to edit.
  */
 window.IVY_CONFIG = {
-  // Paste the Apps Script web app URL ending in /exec.
-  // Leave empty to run the site in DEMO MODE (data stays in this browser only).
-  API_URL: '',
+  // Address of the backend. '/api' is the serverless function deployed with this site on Vercel.
+  // Set to '' to run the site in DEMO MODE (data stays in this browser only).
+  API_URL: '/api',
 
   // Public address of this site, without a trailing slash, e.g. 'https://certificates.ivyproschool.com'.
-  // Leave empty to use whatever address the page is opened from.
+  // Leave empty to use whatever address the page is opened from (recommended).
   SITE_URL: '',
 
   // Where "Explore programs" buttons send people. UTM tags are added automatically.

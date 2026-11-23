@@ -14,14 +14,12 @@ fs.mkdirSync(OUT, { recursive: true });
 
 async function dump() { return (await fetch(BASE + '/__dump')).json(); }
 
-function answerKey(d) {
+function answerKey(d, code) {
   const key = {};
-  d.sheets['Question Bank'].slice(1).forEach((r) => {
-    const opts = { A: r[4], B: r[5], C: r[6], D: r[7] };
-    key[r[3]] = opts[r[8]];
-  });
+  d['workshops/' + code + '.json'].questions.forEach((q) => { key[q.text] = q.options[q.correct]; });
   return key;
 }
+const countKeys = (d, prefix) => Object.keys(d).filter((k) => k.startsWith(prefix)).length;
 
 async function takeAssessment(page, code, who, key, mode) {
   await page.goto(`${BASE}/?w=${code}`);
@@ -72,6 +70,26 @@ async function answerAll(page, key, mode) {
     await admin.waitForSelector('#tab-new:not([hidden])');
     await admin.waitForFunction(() => document.querySelectorAll('#bank option').length > 2);
     await admin.screenshot({ path: path.join(OUT, '01-admin-new.png'), fullPage: true });
+
+    // Question bank editor: paste plain text, preview, save
+    await admin.click('#nav [data-tab=banks]');
+    await admin.waitForSelector('#bankList .ws');
+    await admin.click('#newBankBtn');
+    await admin.fill('#bankId', 'e2e bank');
+    assert.equal(await admin.inputValue('#bankId'), 'E2E-BANK');
+    await admin.fill('#bankTitle', 'E2E sample bank');
+    await admin.fill('#bankText', [
+      '1. What is a prompt?', 'Topic: Basics', 'A) An instruction to the model *', 'B) A GPU', 'C) A licence', '',
+      'Q2: Which output must a human check before use?', 'a. A lunch invite', 'b. A final credit decision (correct)', '',
+      '3) Who is accountable for AI-assisted work you submit?', 'A) The vendor', 'B) You', 'C) Nobody', 'Answer: B'
+    ].join('\n'));
+    await admin.waitForFunction(() => /3 questions found/.test(document.getElementById('bankPreview').textContent));
+    assert.ok(!(await admin.isVisible('#bankPreview .alert-note')), 'no parse problems');
+    await admin.screenshot({ path: path.join(OUT, '01b-bank-editor.png'), fullPage: true });
+    await admin.click('#bankSave');
+    await admin.waitForFunction(() => /E2E sample bank/.test(document.getElementById('bankList').textContent));
+    await admin.click('#nav [data-tab=new]');
+    await admin.waitForFunction(() => [...document.querySelectorAll('#bank option')].some((o) => o.value === 'E2E-BANK'));
     await admin.fill('#programName', 'Generative AI for Everyday Productivity');
     await admin.fill('#clientName', 'Demo Client Pvt Ltd');
     await admin.check('#showClient');
@@ -92,7 +110,7 @@ async function answerAll(page, key, mode) {
     await admin.waitForSelector('#tab-list:not([hidden]) .ws');
     console.log('created workshop', code);
 
-    const key = answerKey(await dump());
+    const key = answerKey(await dump(), code);
 
     /* ---------- Participant 1 on a phone: passes ---------- */
     const phone = await browser.newContext({ ...devices['iPhone 13'], acceptDownloads: true });
@@ -132,7 +150,7 @@ async function answerAll(page, key, mode) {
     assert.match(await p1.textContent('#certSub'), /already have a certificate/);
 
     let d = await dump();
-    const certId = d.sheets.Certificates[1][1];
+    const certId = Object.keys(d).find((k) => k.startsWith('certs/')).slice(6, -5);
     assert.match(certId, /^IVY-\d{4}-[A-Z2-9]{6}$/);
 
     /* ---------- Participant 2: fails twice -> participation ---------- */
@@ -158,9 +176,8 @@ async function answerAll(page, key, mode) {
     assert.match(await p3.textContent('#certSub'), /already have a certificate/);
 
     d = await dump();
-    assert.equal(d.sheets.Submissions.length - 1, 3, 'three attempt rows (1 pass + 2 fails)');
-    assert.equal(d.sheets.Certificates.length - 1, 2);
-    assert.equal(d.tz, 'Asia/Calcutta');
+    assert.equal(countKeys(d, 'subs/'), 3, 'three attempts (1 pass + 2 fails)');
+    assert.equal(countKeys(d, 'certs/'), 2);
 
     /* ---------- Public verification ---------- */
     const viewer = await desk.newPage();
