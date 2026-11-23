@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ivy Trainer Console</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="assets/ivy-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+<style>
+  .hero { padding-bottom: 22px; }
+  .hero h1 { font-size: clamp(24px, 4vw, 34px); }
+  .nav { display: flex; gap: 6px; margin-top: 18px; flex-wrap: wrap; }
+  .nav button { font: 700 14px var(--head); color: rgba(255,255,255,.85); background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 10px; padding: 9px 16px; cursor: pointer; min-height: 42px; }
+  .nav button[aria-current=page] { background: #fff; color: var(--deep); }
+  .nav .spacer { flex: 1; }
+  .ws-list { display: grid; gap: 12px; }
+  .ws { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: grid; grid-template-columns: 1fr auto; gap: 10px 16px; align-items: center; }
+  .ws h3 { margin: 0 0 2px; font-size: 17px; }
+  .ws .meta { font-size: 13px; color: var(--muted); }
+  .ws .nums { display: flex; gap: 18px; font-size: 13px; color: var(--muted); }
+  .ws .nums b { font: 800 20px var(--head); color: var(--navy); display: block; line-height: 1.1; }
+  .ws .btns { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; }
+  .ws .btns .btn { min-height: 38px; padding: 8px 14px; font-size: 13px; }
+  .pill { display: inline-block; font: 700 11px var(--head); letter-spacing: .06em; text-transform: uppercase; border-radius: 999px; padding: 3px 10px; margin-left: 6px; vertical-align: middle; }
+  .pill.open { background: var(--ok-bg); color: var(--ok); }
+  .pill.closed { background: #eef1f4; color: var(--muted); }
+  .code { font: 800 15px var(--head); letter-spacing: .12em; color: var(--deep); }
+  .toggle-row { display: flex; gap: 12px; align-items: flex-start; }
+  .toggle-row input { width: 20px; height: 20px; margin-top: 3px; accent-color: var(--deep); flex: none; }
+
+  /* Presenter overlay */
+  .present { position: fixed; inset: 0; z-index: 40; background: linear-gradient(135deg, #083b6d, var(--deep) 58%, #087ca8); color: #fff; overflow: auto; }
+  .present-inner { min-height: 100%; display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: center; padding: 48px 6vw; max-width: 1500px; margin: 0 auto; }
+  .present .logo-chip { position: absolute; top: 24px; right: 24px; }
+  .present .logo-chip img { height: 64px; }
+  .present .tag { font: 700 16px var(--head); letter-spacing: .16em; color: var(--amber); text-transform: uppercase; }
+  .present h2 { color: #fff; font-weight: 800; font-size: clamp(32px, 4.6vw, 64px); letter-spacing: -.03em; margin: 12px 0 16px; }
+  .present .prog { font: 600 clamp(18px, 2vw, 26px) var(--head); color: rgba(255,255,255,.9); margin-bottom: 18px; }
+  .present .url { font-size: clamp(15px, 1.5vw, 20px); color: rgba(255,255,255,.8); word-break: break-all; }
+  .present .bigcode { font: 800 clamp(36px, 5vw, 64px) var(--head); letter-spacing: .14em; color: var(--amber); margin-top: 6px; }
+  .present .counter { margin-top: 22px; display: inline-flex; gap: 10px; align-items: baseline; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 12px; padding: 10px 16px; }
+  .present .counter b { font: 800 30px var(--head); color: #fff; }
+  .qr-box { background: #fff; border-radius: 28px; padding: 22px; justify-self: center; width: min(78vh, 100%); max-width: 640px; }
+  .qr-box canvas { width: 100%; height: auto; display: block; image-rendering: pixelated; }
+  .present-tools { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; background: rgba(9,47,85,.85); padding: 8px; border-radius: 14px; }
+  .present-tools .btn { min-height: 40px; padding: 8px 14px; font-size: 13px; }
+  .present:fullscreen .present-tools { opacity: .15; transition: opacity .2s; }
+  .present:fullscreen .present-tools:hover { opacity: 1; }
+
+  /* Results */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+  .kpi { background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .kpi .h { font: 700 11px var(--head); letter-spacing: .08em; text-transform: uppercase; padding: 8px 12px; color: #fff; background: var(--sky); }
+  .kpi:nth-child(even) .h { background: var(--deep); }
+  .kpi .v { font: 800 30px var(--head); color: var(--navy); padding: 10px 12px 2px; }
+  .kpi .s { font-size: 12px; color: var(--muted); padding: 0 12px 10px; }
+  .bars { display: grid; gap: 10px; }
+  .bar-row { display: grid; grid-template-columns: minmax(0, 1fr) 160px 48px; gap: 12px; align-items: center; font-size: 14px; }
+  .bar-row .t { overflow: hidden; text-overflow: ellipsis; }
+  .bar-row .t small { color: var(--muted); display: block; font-size: 12px; }
+  .bar { height: 12px; border-radius: 6px; background: var(--soft); overflow: hidden; border: 1px solid var(--line); }
+  .bar span { display: block; height: 100%; background: var(--sky); }
+  .bar.low span { background: var(--amber); }
+  .bar-row .p { font: 700 14px var(--head); color: var(--navy); text-align: right; }
+  .flag { font: 700 10px var(--head); letter-spacing: .06em; text-transform: uppercase; color: #8a5a00; background: #fff3d6; border-radius: 6px; padding: 2px 6px; margin-left: 6px; }
+  table.people { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.people th { text-align: left; font: 700 12px var(--head); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--line); padding: 8px; white-space: nowrap; }
+  table.people td { border-bottom: 1px solid var(--line); padding: 8px; vertical-align: top; }
+  table.people tr.test td { color: var(--muted); font-style: italic; }
+  .table-wrap { overflow-x: auto; }
+  @media (max-width: 900px) {
+    .present-inner { grid-template-columns: 1fr; padding-top: 110px; padding-bottom: 110px; }
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .bar-row { grid-template-columns: minmax(0, 1fr) 90px 42px; }
+  }
+</style>
+</head>
+<body>
+<div class="demo-banner" id="demoBanner" hidden><b>Demo mode.</b> Data stays in this browser. The admin key is <b>demo</b>. Add the Apps Script URL in config.js to go live.</div>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-top">
+      <div class="hero-tag">Trainer console</div>
+      <span class="logo-chip"><img src="assets/ivy-logo.png" alt="Ivy Professional School" width="63" height="52"></span>
+    </div>
+    <h1>Workshop assessments and certificates</h1>
+    <p class="hero-sub">Create a workshop, flash the QR code at the end of the session, and track results live.</p>
+    <nav class="nav" id="nav" hidden>
+      <button data-tab="new" aria-current="page">New workshop</button>
+      <button data-tab="list">My workshops</button>
+      <span class="spacer"></span>
+      <button id="lockBtn">Lock</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap wide">
+
+  <!-- Key gate -->
+  <section id="gate" hidden>
+    <form class="card" id="gateForm" style="max-width:520px" novalidate>
+      <div class="eyebrow">Sign in</div>
+      <h2>Enter the admin key</h2>
+      <p class="muted">The key is shown when you run setup in the Google Sheet (Ivy Certificates menu, Show admin key). It is saved in this browser only.</p>
+      <div class="field">
+        <label for="adminKey">Admin key</label>
+        <input type="password" id="adminKey" autocomplete="current-password" required>
+      </div>
+      <div class="alert alert-error" id="gateError" hidden></div>
+      <button class="btn btn-primary" type="submit" id="gateBtn">Unlock</button>
+    </form>
+  </section>
+
+  <!-- New workshop -->
+  <section id="tab-new" hidden>
+    <form class="card" id="newForm" novalidate>
+      <div class="eyebrow">Step 1</div>
+      <h2>Workshop details</h2>
+      <div class="field">
+        <label for="programName">Program name</label>
+        <input type="text" id="programName" maxlength="120" required placeholder="e.g. Generative AI for Productivity">
+        <div class="hint">Printed on every certificate. Check spelling now: issued certificates keep the name they were issued with.</div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="clientName">Client name</label>
+          <input type="text" id="clientName" maxlength="120" placeholder="Leave blank for open workshops">
+        </div>
+        <div class="field">
+          <label for="date">Workshop date</label>
+          <input type="date" id="date" required>
+        </div>
+      </div>
+      <div class="field">
+        <label class="toggle-row"><input type="checkbox" id="showClient"><span><b>Show client name on certificates and LinkedIn posts</b><br><span class="muted small">Tick only when the client has approved being named in public. Certificates are shared on LinkedIn and on a public verification page. The client name is always stored for your reports.</span></span></label>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="trainer">Trainer name</label>
+          <input type="text" id="trainer" maxlength="80" placeholder="Printed on the certificate (optional)">
+        </div>
+        <div class="field">
+          <label for="duration">Duration</label>
+          <input type="text" id="duration" maxlength="40" placeholder="e.g. 3 hours or 2 days (optional)">
+        </div>
+      </div>
+
+      <div class="eyebrow" style="margin-top:10px">Step 2</div>
+      <h2>Assessment</h2>
+      <div class="field">
+        <label for="bank">Question bank</label>
+        <select id="bank"></select>
+        <div class="hint">Questions live in the "Question Bank" tab of the Google Sheet. Add a new Bank ID there to create a new set.</div>
+      </div>
+      <div class="row2" id="scoringRow">
+        <div class="field">
+          <label for="passMark">Pass mark (%)</label>
+          <input type="number" id="passMark" min="0" max="100" value="60">
+        </div>
+        <div class="field">
+          <label for="maxAttempts">Attempts allowed</label>
+          <select id="maxAttempts"><option>1</option><option selected>2</option><option>3</option></select>
+          <div class="hint">Below the pass mark on the last attempt, participants get a Certificate of Participation.</div>
+        </div>
+      </div>
+      <div class="field" style="max-width:340px">
+        <label for="acceptUntil">Accept submissions until</label>
+        <input type="date" id="acceptUntil">
+        <div class="hint">Default is three days after the workshop. You can close it early from My workshops.</div>
+      </div>
+      <div class="alert alert-error" id="newError" hidden></div>
+      <button class="btn btn-amber" type="submit" id="createBtn">Create workshop and show QR code</button>
+    </form>
+  </section>
+
+  <!-- Workshops list -->
+  <section id="tab-list" hidden>
+    <div class="actions split" style="margin-bottom:14px;align-items:center">
+      <h2 style="margin:0">My workshops</h2>
+      <button class="btn btn-ghost" id="refreshList">Refresh</button>
+    </div>
+    <div class="alert alert-error" id="listError" hidden></div>
+    <div class="ws-list" id="wsList"><div class="spinner"></div></div>
+  </section>
+
+  <!-- Results -->
+  <section id="tab-results" hidden>
+    <div class="actions split" style="margin-bottom:14px;align-items:center">
+      <div>
+        <div class="eyebrow" id="resEyebrow">Results</div>
+        <h2 style="margin:0" id="resTitle"></h2>
+        <div class="muted small" id="resMeta"></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-ghost" id="resBack">Back</button>
+        <button class="btn btn-ghost" id="resRefresh">Refresh</button>
+        <button class="btn btn-primary" id="resCsv">Export CSV</button>
+      </div>
+    </div>
+    <div class="alert alert-error" id="resError" hidden></div>
+    <div id="resBody"><div class="spinner"></div></div>
+  </section>
+</main>
+
+<!-- Presenter -->
+<div class="present" id="present" hidden role="dialog" aria-modal="true" aria-labelledby="pTitle">
+  <span class="logo-chip"><img src="assets/ivy-logo.png" alt="Ivy Professional School"></span>
+  <div class="present-inner">
+    <div>
+      <div class="tag">Before you leave</div>
+      <h2 id="pTitle">Scan to take the assessment and get your certificate</h2>
+      <div class="prog" id="pProg"></div>
+      <div class="url">Or open <span id="pHost"></span> and enter code</div>
+      <div class="bigcode" id="pCode"></div>
+      <div><div class="counter" aria-live="polite"><b id="pCount">0</b><span>completed so far</span></div></div>
+    </div>
+    <div class="qr-box"><canvas id="pQr" width="1000" height="1000" aria-label="QR code for the assessment"></canvas></div>
+  </div>
+  <div class="present-tools">
+    <button class="btn btn-amber" id="pFull">Full screen</button>
+    <button class="btn btn-ghost" id="pDlQr">Download QR (PNG)</button>
+    <button class="btn btn-ghost" id="pDlSlide">Download QR slide for deck</button>
+    <button class="btn btn-ghost" id="pCopy">Copy link</button>
+    <button class="btn btn-ghost" id="pTest">Open participant page</button>
+    <button class="btn btn-primary" id="pClose">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="config.js"></script>
+<script src="vendor/qrcode-generator-1.4.4.js"></script>
+<script src="js/api.js"></script>
+<script src="js/certificate.js"></script>
+<script>
+(function () {
+  'use strict';
+  var U = IvyUtil, api = IvyApi, Cert = IvyCert;
+  var $ = function (id) { return document.getElementById(id); };
+  var KEY_STORE = 'ivy-admin-key';
+  var key = '';
+  var workshops = [];
+  var current = null;     // workshop shown in presenter / results
+  var lastStats = null;
+  var pollTimer = null;
+
+  if (api.isDemo) $('demoBanner').hidden = false;
+
+  function ls() { try { return window.localStorage; } catch (e) { return null; } }
+  function toast(msg) { var t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(function () { t.hidden = true; }, 4000); }
+  function err(id, msg) { var e = $(id); e.textContent = msg || ''; e.hidden = !msg; }
+
+  /* ---------- gate ---------- */
+  function lock() { var s = ls(); if (s) s.removeItem(KEY_STORE); key = ''; showGate(); }
+  function showGate() {
+    $('nav').hidden = true;
+    ['tab-new', 'tab-list', 'tab-results'].forEach(function (id) { $(id).hidden = true; });
+    $('gate').hidden = false;
+    $('adminKey').value = api.isDemo ? 'demo' : '';
+    $('adminKey').focus();
+  }
+  $('gateForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var k = $('adminKey').value.trim();
+    if (!k) return;
+    $('gateBtn').disabled = true; err('gateError');
+    api.admin('ping', k).then(function (res) {
+      $('gateBtn').disabled = false;
+      if (!res.ok) return err('gateError', res.error);
+      key = k; var s = ls(); if (s) s.setItem(KEY_STORE, k);
+      unlocked();
+    });
+  });
+  $('lockBtn').addEventListener('click', lock);
+
+  function unlocked() {
+    $('gate').hidden = true; $('nav').hidden = false;
+    loadBanks();
+    tab('new');
+  }
+
+  /* ---------- tabs ---------- */
+  function tab(name) {
+    document.querySelectorAll('#nav [data-tab]').forEach(function (b) {
+      if (b.getAttribute('data-tab') === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+    $('tab-new').hidden = name !== 'new';
+    $('tab-list').hidden = name !== 'list';
+    $('tab-results').hidden = name !== 'results';
+    if (name === 'list') loadList();
+  }
+  document.querySelectorAll('#nav [data-tab]').forEach(function (b) { b.addEventListener('click', function () { tab(b.getAttribute('data-tab')); }); });
+
+  /* ---------- new workshop ---------- */
+  $('date').value = U.todayIso();
+  $('acceptUntil').value = U.addDays(U.todayIso(), 3);
+  var acceptTouched = false;
+  $('acceptUntil').addEventListener('input', function () { acceptTouched = true; });
+  $('date').addEventListener('change', function () { if (!acceptTouched && $('date').value) $('acceptUntil').value = U.addDays($('date').value, 3); });
+
+  function loadBanks() {
+    var sel = $('bank');
+    sel.innerHTML = '<option value="">Loading question banks...</option>';
+    api.admin('banks', key).then(function (res) {
+      if (!res.ok) { sel.innerHTML = '<option value="NONE">No assessment (feedback and participation certificate)</option>'; return toast(res.error); }
+      sel.innerHTML = res.banks.map(function (b) {
+        return '<option value="' + U.esc(b.id) + '"' + (b.count ? '' : ' disabled') + '>' + U.esc(b.id) + ' (' + b.count + ' questions' + (b.topics.length ? ': ' + U.esc(b.topics.slice(0, 4).join(', ')) : '') + ')</option>';
+      }).join('') + '<option value="NONE">No assessment (feedback and participation certificate)</option>';
+      syncScoring();
+    });
+  }
+  function syncScoring() { $('scoringRow').hidden = $('bank').value === 'NONE'; }
+  $('bank').addEventListener('change', syncScoring);
+
+  $('newForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    err('newError');
+    var w = {
+      programName: $('programName').value.replace(/\s+/g, ' ').trim(),
+      clientName: $('clientName').value.replace(/\s+/g, ' ').trim(),
+      showClient: $('showClient').checked,
+      date: $('date').value,
+      trainer: $('trainer').value.replace(/\s+/g, ' ').trim(),
+      duration: $('duration').value.trim(),
+      bank: $('bank').value,
+      passMark: Number($('passMark').value),
+      maxAttempts: Number($('maxAttempts').value),
+      acceptUntil: $('acceptUntil').value
+    };
+    if (w.programName.length < 3) { err('newError', 'Please enter the program name.'); return $('programName').focus(); }
+    if (!w.date) { err('newError', 'Please choose the workshop date.'); return $('date').focus(); }
+    if (!w.bank) { err('newError', 'Question banks are still loading. Try again in a moment.'); return; }
+    if (w.bank !== 'NONE' && !(w.passMark >= 0 && w.passMark <= 100)) { err('newError', 'Pass mark must be between 0 and 100.'); return $('passMark').focus(); }
+    if (w.acceptUntil && w.acceptUntil < w.date) { err('newError', '"Accept submissions until" must be on or after the workshop date.'); return $('acceptUntil').focus(); }
+    if (w.showClient && !w.clientName) { err('newError', 'Add the client name, or untick "Show client name".'); return $('clientName').focus(); }
+    var btn = $('createBtn'); btn.disabled = true; btn.textContent = 'Creating...';
+    api.admin('createWorkshop', key, { workshop: w }).then(function (res) {
+      btn.disabled = false; btn.textContent = 'Create workshop and show QR code';
+      if (!res.ok) return err('newError', res.error);
+      $('newForm').reset();
+      $('date').value = U.todayIso(); $('acceptUntil').value = U.addDays(U.todayIso(), 3); acceptTouched = false;
+      $('passMark').value = 60; $('maxAttempts').value = '2';
+      loadBanks();
+      present(res.workshop);
+    });
+  });
+
+  /* ---------- list ---------- */
+  function loadList() {
+    err('listError');
+    $('wsList').innerHTML = '<div class="spinner"></div>';
+    api.admin('workshops', key).then(function (res) {
+      if (!res.ok) { $('wsList').innerHTML = ''; return err('listError', res.error); }
+      workshops = res.workshops;
+      if (!workshops.length) { $('wsList').innerHTML = '<div class="card muted">No workshops yet. Create one from New workshop.</div>'; return; }
+      $('wsList').innerHTML = workshops.map(function (w) {
+        var bits = [U.formatDate(w.date, true)];
+        if (w.clientName) bits.push(U.esc(w.clientName) + (w.showClient ? '' : ' (hidden on certificate)'));
+        if (w.trainer) bits.push(U.esc(w.trainer));
+        bits.push(w.bank === 'NONE' ? 'No assessment' : U.esc(w.bank) + ', pass ' + w.passMark + '%');
+        return '<div class="ws">'
+          + '<div><h3>' + U.esc(w.programName) + '<span class="pill ' + (w.open ? 'open' : 'closed') + '">' + (w.open ? 'Open' : 'Closed') + '</span></h3>'
+          + '<div class="meta">' + bits.join('  ·  ') + '</div>'
+          + '<div class="meta">Code <span class="code">' + U.esc(w.code) + '</span>  ·  open until ' + U.formatDate(w.acceptUntil, true) + '</div></div>'
+          + '<div class="nums"><div><b>' + w.participants + '</b>participants</div><div><b>' + w.certificates + '</b>certificates</div></div>'
+          + '<div class="btns">'
+          + '<button class="btn btn-amber" data-act="present" data-code="' + U.esc(w.code) + '">Show QR</button>'
+          + '<button class="btn btn-primary" data-act="results" data-code="' + U.esc(w.code) + '">Results</button>'
+          + '<button class="btn btn-ghost" data-act="copy" data-code="' + U.esc(w.code) + '">Copy link</button>'
+          + '<button class="btn btn-ghost" data-act="toggle" data-code="' + U.esc(w.code) + '">' + (w.status === 'Active' ? 'Close submissions' : 'Reopen') + '</button>'
+          + '</div></div>';
+      }).join('');
+    });
+  }
+  $('refreshList').addEventListener('click', loadList);
+  $('wsList').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-act]');
+    if (!b) return;
+    var w = workshops.filter(function (x) { return x.code === b.getAttribute('data-code'); })[0];
+    if (!w) return;
+    var act = b.getAttribute('data-act');
+    if (act === 'present') present(w);
+    if (act === 'results') results(w);
+    if (act === 'copy') Cert.copyText(U.workshopUrl(w.code)).then(function () { toast('Link copied: ' + U.workshopUrl(w.code)); });
+    if (act === 'toggle') {
+      var next = w.status === 'Active' ? 'Closed' : 'Active';
+      if (next === 'Closed' && !confirm('Close submissions for "' + w.programName + '"? Participants will no longer be able to take the assessment. Issued certificates stay valid.')) return;
+      b.disabled = true;
+      api.admin('setStatus', key, { code: w.code, status: next }).then(function (res) {
+        if (!res.ok) { b.disabled = false; return toast(res.error); }
+        toast(next === 'Closed' ? 'Submissions closed.' : 'Workshop reopened.');
+        loadList();
+      });
+    }
+  });
+
+  /* ---------- presenter ---------- */
+  function present(w) {
+    current = w;
+    var url = U.workshopUrl(w.code);
+    $('pProg').textContent = w.programName + (w.clientName && w.showClient ? '  ·  ' + w.clientName : '');
+    $('pHost').textContent = U.siteBase().replace(/^https?:\/\//, '');
+    $('pCode').textContent = w.code;
+    $('pCount').textContent = w.participants || 0;
+    var cv = $('pQr');
+    var q = Cert.qrCanvas(url, 1000, '#000');
+    cv.getContext('2d').drawImage(q, 0, 0);
+    $('present').hidden = false;
+    document.body.style.overflow = 'hidden';
+    $('pClose').focus();
+    clearInterval(pollTimer);
+    pollTimer = setInterval(pollCount, 15000);
+  }
+  function pollCount() {
+    if (!current || $('present').hidden) return;
+    api.admin('workshops', key).then(function (res) {
+      if (!res.ok) return;
+      workshops = res.workshops;
+      var w = workshops.filter(function (x) { return x.code === current.code; })[0];
+      if (w) $('pCount').textContent = w.participants;
+    });
+  }
+  function closePresent() {
+    clearInterval(pollTimer);
+    if (document.fullscreenElement) document.exitFullscreen();
+    $('present').hidden = true;
+    document.body.style.overflow = '';
+    tab('list');
+  }
+  $('pClose').addEventListener('click', closePresent);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('present').hidden && !document.fullscreenElement) closePresent(); });
+  $('pFull').addEventListener('click', function () {
+    var el = $('present');
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (el.requestFullscreen) el.requestFullscreen();
+  });
+  $('pDlQr').addEventListener('click', function () {
+    Cert.downloadPng(Cert.qrCanvas(U.workshopUrl(current.code), 1200, '#000'), 'Ivy-QR-' + current.code + '.png');
+  });
+  $('pDlSlide').addEventListener('click', function () {
+    Cert.renderQrSlide(current, U.workshopUrl(current.code)).then(function (cv) { Cert.downloadPng(cv, 'Ivy-QR-slide-' + current.code + '.png'); });
+  });
+  $('pCopy').addEventListener('click', function () { Cert.copyText(U.workshopUrl(current.code)).then(function () { toast('Link copied.'); }); });
+  $('pTest').addEventListener('click', function () { window.open(U.workshopUrl(current.code), '_blank', 'noopener'); });
+
+  /* ---------- results ---------- */
+  function results(w) {
+    current = w;
+    tab('results');
+    $('resTitle').textContent = w.programName;
+    var bits = [U.formatDate(w.date)];
+    if (w.clientName) bits.push(w.clientName);
+    bits.push('Code ' + w.code);
+    $('resMeta').textContent = bits.join('  ·  ');
+    loadStats();
+  }
+  function loadStats() {
+    err('resError');
+    $('resBody').innerHTML = '<div class="spinner"></div>';
+    api.admin('stats', key, { code: current.code }).then(function (res) {
+      if (!res.ok) { $('resBody').innerHTML = ''; return err('resError', res.error); }
+      lastStats = res;
+      renderStats(res);
+    });
+  }
+  $('resRefresh').addEventListener('click', loadStats);
+  $('resBack').addEventListener('click', function () { tab('list'); });
+
+  function fmt(v, suffix) { return v === null || v === undefined ? '-' : v + (suffix || ''); }
+
+  function renderStats(r) {
+    var k = r.kpis, hasA = r.workshop.bank !== 'NONE';
+    var tiles = [
+      ['Participants', k.participants, k.testRowsExcluded ? k.testRowsExcluded + ' test rows excluded' : 'unique emails'],
+      ['Certificates', k.certificates, k.achievements + ' achievement, ' + k.participations + ' participation'],
+      ['Pass rate', fmt(k.passRate, '%'), hasA ? 'pass mark ' + r.workshop.passMark + '%' : 'no assessment'],
+      ['Avg first score', fmt(k.avgFirstScore, '%'), hasA ? 'best attempt avg ' + fmt(k.avgBestScore, '%') : 'no assessment'],
+      ['Avg rating', fmt(k.avgRating), 'out of 5'],
+      ['Ivy opt-ins', k.optIns, 'want program updates'],
+      ['Attempts allowed', hasA ? r.workshop.maxAttempts : '-', 'per participant'],
+      ['Status', r.workshop.open ? 'Open' : 'Closed', 'until ' + U.formatDate(r.workshop.acceptUntil, true)]
+    ];
+    var html = '<div class="kpis">' + tiles.map(function (t) {
+      return '<div class="kpi"><div class="h">' + U.esc(t[0]) + '</div><div class="v">' + U.esc(t[1]) + '</div><div class="s">' + U.esc(t[2]) + '</div></div>';
+    }).join('') + '</div>';
+
+    if (hasA) {
+      var qs = r.questionStats.slice().sort(function (a, b) { return (a.pctCorrect === null ? 101 : a.pctCorrect) - (b.pctCorrect === null ? 101 : b.pctCorrect); });
+      html += '<div class="card"><div class="eyebrow">For the trainer</div><h3>Question-level % correct (first attempts)</h3><p class="muted small">Lowest first. Items under 50% are worth revisiting in the next session.</p><div class="bars">'
+        + qs.map(function (q) {
+          var p = q.pctCorrect, low = p !== null && p < 50;
+          return '<div class="bar-row"><div class="t">' + U.esc(q.text) + (low ? '<span class="flag">Revisit</span>' : '') + '<small>' + U.esc(q.topic || '') + ' · ' + q.answered + ' answered</small></div>'
+            + '<div class="bar' + (low ? ' low' : '') + '"><span style="width:' + (p || 0) + '%"></span></div><div class="p">' + fmt(p, '%') + '</div></div>';
+        }).join('') + '</div></div>';
+    }
+
+    var maxR = Math.max.apply(null, r.ratingDist.concat([1]));
+    html += '<div class="card"><div class="eyebrow">Feedback</div><h3>How useful was the workshop?</h3><div class="bars">'
+      + r.ratingDist.map(function (n, i) { return '<div class="bar-row"><div class="t">' + (i + 1) + ' of 5</div><div class="bar"><span style="width:' + Math.round(n / maxR * 100) + '%"></span></div><div class="p">' + n + '</div></div>'; }).reverse().join('')
+      + '</div></div>';
+
+    html += '<div class="card"><div class="eyebrow">Participants</div><h3>' + r.participants.length + ' people</h3>'
+      + '<div class="table-wrap"><table class="people"><thead><tr><th>Name</th><th>Email</th><th>Attempts</th><th>First</th><th>Best</th><th>Certificate</th><th>Rating</th><th>Takeaway</th></tr></thead><tbody>'
+      + (r.participants.length ? r.participants.map(function (p) {
+        return '<tr' + (p.isTest ? ' class="test"' : '') + '><td>' + U.esc(p.name) + (p.isTest ? ' (test)' : '') + '</td><td>' + U.esc(p.email) + '</td><td>' + p.attempts + '</td><td>' + fmt(p.firstScore, '%') + '</td><td>' + fmt(p.bestScore, '%') + '</td>'
+          + '<td>' + (p.certId ? '<a href="' + U.esc(U.verifyUrl(p.certId)) + '" target="_blank" rel="noopener">' + U.esc(p.certType) + '</a>' : '<span class="muted">Not yet</span>') + '</td>'
+          + '<td>' + fmt(p.rating) + '</td><td>' + U.esc(p.takeaway || '') + '</td></tr>';
+      }).join('') : '<tr><td colspan="8" class="muted">No submissions yet.</td></tr>')
+      + '</tbody></table></div><p class="muted small" style="margin-top:12px">Names starting with "TEST" are treated as test rows and left out of the figures above.</p></div>';
+    $('resBody').innerHTML = html;
+  }
+
+  $('resCsv').addEventListener('click', function () {
+    if (!lastStats) return;
+    var rows = [['Name', 'Email', 'Attempts', 'First score %', 'Best score %', 'Certificate type', 'Certificate ID', 'Verify URL', 'Rating', 'Key takeaway', 'Ivy updates opt-in', 'Test row']];
+    lastStats.participants.forEach(function (p) {
+      rows.push([p.name, p.email, p.attempts, p.firstScore, p.bestScore, p.certType, p.certId, p.certId ? U.verifyUrl(p.certId) : '', p.rating, p.takeaway, p.optIn ? 'Yes' : 'No', p.isTest ? 'Yes' : 'No']);
+    });
+    var csv = rows.map(function (r) {
+      return r.map(function (v) {
+        var s = v === null || v === undefined ? '' : String(v);
+        if (/^[=+\-@]/.test(s)) s = "'" + s;
+        return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      }).join(',');
+    }).join('\r\n');
+    Cert.saveBlob(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }), 'Ivy-results-' + lastStats.workshop.code + '.csv');
+  });
+
+  /* ---------- boot ---------- */
+  var s = ls();
+  var saved = s && s.getItem(KEY_STORE);
+  if (saved) {
+    api.admin('ping', saved).then(function (res) {
+      if (res.ok) { key = saved; unlocked(); }
+      else { if (s) s.removeItem(KEY_STORE); showGate(); if (res.code !== 'unauthorised') err('gateError', res.error); }
+    });
+  } else showGate();
+})();
+</script>
+</body>
+</html>

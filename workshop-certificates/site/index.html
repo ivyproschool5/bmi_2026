@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ivy Workshop Certificate</title>
+<meta name="description" content="Take your post-workshop assessment and get your Ivy Professional School certificate. Verify any Ivy workshop certificate.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Verified certificate from Ivy Professional School">
+<meta property="og:description" content="AI and data science training since 2008. 37,500+ alumni. View and verify this workshop certificate.">
+<meta property="og:image" content="assets/og-card.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0b5394">
+<link rel="icon" type="image/png" href="assets/ivy-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+<style>
+  .q-count { font-family: var(--head); font-weight: 700; color: var(--muted); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
+  .q-text { font-size: clamp(19px, 3.6vw, 24px); margin: 6px 0 18px; }
+  .name-preview { margin-top: 8px; padding: 10px 14px; border-radius: 10px; background: var(--soft); border: 1px dashed var(--line); font-size: 13px; color: var(--muted); }
+  .name-preview b { display: block; font-family: var(--head); font-size: 20px; color: var(--navy); }
+  .cert-frame { background: var(--soft); border: 1px solid var(--line); border-radius: 14px; padding: 10px; }
+  .cert-frame img { display: block; width: 100%; height: auto; border-radius: 6px; box-shadow: 0 6px 20px rgba(9, 47, 85, .12); }
+  .cert-frame.badge img { max-width: 420px; margin: 0 auto; }
+  .tabs { display: inline-flex; background: var(--soft); border: 1px solid var(--line); border-radius: 12px; padding: 4px; margin-bottom: 12px; }
+  .tabs button { font: 600 14px var(--head); border: 0; background: transparent; color: var(--muted); padding: 8px 16px; border-radius: 9px; cursor: pointer; min-height: 40px; }
+  .tabs button[aria-selected=true] { background: #fff; color: var(--deep); box-shadow: 0 2px 6px rgba(9, 47, 85, .1); }
+  .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+  .action-grid .wide { grid-column: 1 / -1; }
+  .share-box textarea { font-size: 14px; min-height: 150px; }
+  .result-score { display: flex; gap: 14px; align-items: center; margin-bottom: 8px; }
+  .score-ring { flex: none; width: 74px; height: 74px; border-radius: 50%; display: grid; place-items: center; font: 800 20px var(--head); color: var(--navy); background: conic-gradient(var(--sky) calc(var(--p) * 1%), var(--line) 0); position: relative; }
+  .score-ring::before { content: ''; position: absolute; inset: 7px; background: #fff; border-radius: 50%; }
+  .score-ring span { position: relative; }
+  .check { width: 56px; height: 56px; border-radius: 50%; background: var(--amber); display: grid; place-items: center; margin-bottom: 12px; }
+  .check svg { width: 30px; height: 30px; }
+  .verified { display: inline-flex; align-items: center; gap: 8px; background: var(--ok-bg); color: var(--ok); border: 1px solid #b8e3c8; border-radius: 999px; padding: 6px 14px; font: 700 13px var(--head); letter-spacing: .04em; margin-bottom: 14px; }
+  .verified svg { width: 16px; height: 16px; }
+  dl.facts { display: grid; grid-template-columns: 160px 1fr; gap: 8px 16px; margin: 16px 0 0; font-size: 15px; }
+  dl.facts dt { color: var(--muted); }
+  dl.facts dd { margin: 0; font-weight: 500; color: var(--navy); word-break: break-word; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--navy); color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 14px; max-width: calc(100% - 32px); box-shadow: 0 10px 30px rgba(0,0,0,.25); z-index: 50; }
+  .inline-form { display: flex; gap: 10px; }
+  .inline-form input { flex: 1; text-transform: uppercase; }
+  @media (max-width: 640px) {
+    .action-grid { grid-template-columns: 1fr; }
+    dl.facts { grid-template-columns: 1fr; gap: 2px; }
+    dl.facts dd { margin-bottom: 10px; }
+    .inline-form { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="demo-banner" id="demoBanner" hidden><b>Demo mode.</b> Responses are saved in this browser only. Add the Apps Script URL in config.js to go live.</div>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-top">
+      <div class="hero-tag" id="heroTag">Ivy workshop certificates</div>
+      <a class="logo-chip" id="logoLink" href="https://ivyproschool.com" target="_blank" rel="noopener"><img src="assets/ivy-logo.png" alt="Ivy Professional School" width="63" height="52"></a>
+    </div>
+    <h1 id="heroTitle">Your workshop certificate</h1>
+    <p class="hero-sub" id="heroSub">Take the short assessment, then download or share your certificate.</p>
+    <div class="meta-grid" id="heroMeta" hidden></div>
+  </div>
+</header>
+<div class="progress" id="progress" hidden><span id="progressFill"></span></div>
+
+<main class="wrap" id="app" aria-live="polite">
+
+  <!-- Loading -->
+  <section data-view="loading">
+    <div class="card center"><div class="spinner" role="status" aria-label="Loading"></div><p class="muted">Loading...</p></div>
+  </section>
+
+  <!-- Message (errors, closed) -->
+  <section data-view="message" hidden>
+    <div class="card">
+      <h2 id="msgTitle">Something went wrong</h2>
+      <p id="msgBody" class="muted"></p>
+      <div class="actions"><button class="btn btn-primary" id="msgRetry" hidden>Try again</button><a class="btn btn-ghost" href="./">Go to start</a></div>
+    </div>
+  </section>
+
+  <!-- Landing (no code in URL) -->
+  <section data-view="landing" hidden>
+    <div class="card">
+      <div class="eyebrow">Workshop participants</div>
+      <h2>Enter your workshop code</h2>
+      <p class="muted">Your trainer shows a QR code and a six-character code at the end of the session.</p>
+      <form class="inline-form" id="codeForm" novalidate>
+        <label class="sr-only" for="codeInput">Workshop code</label>
+        <input type="text" id="codeInput" maxlength="10" autocomplete="off" placeholder="e.g. K7Q2MX" required>
+        <button class="btn btn-primary" type="submit">Start</button>
+      </form>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Employers and recruiters</div>
+      <h2>Verify a certificate</h2>
+      <p class="muted">Every Ivy workshop certificate has an ID such as IVY-2611-AB3CDE.</p>
+      <form class="inline-form" id="verifyForm" novalidate>
+        <label class="sr-only" for="verifyInput">Certificate ID</label>
+        <input type="text" id="verifyInput" maxlength="20" autocomplete="off" placeholder="IVY-0000-XXXXXX" required>
+        <button class="btn btn-ghost" type="submit">Verify</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Participant details -->
+  <section data-view="details" hidden>
+    <form class="card" id="detailsForm" novalidate>
+      <div class="eyebrow">Step 1</div>
+      <h2>Your details</h2>
+      <p class="muted" id="detailsIntro"></p>
+      <div class="field" id="f-name">
+        <label for="name">Full name</label>
+        <input type="text" id="name" autocomplete="name" maxlength="80" required aria-describedby="nameHint">
+        <div class="hint" id="nameHint">Type it exactly as you want it on your certificate.</div>
+        <div class="name-preview" id="namePreview" hidden>Your certificate will read<b id="namePreviewText"></b></div>
+      </div>
+      <div class="field" id="f-email">
+        <label for="email">Work email</label>
+        <input type="email" id="email" autocomplete="email" maxlength="120" required aria-describedby="emailHint">
+        <div class="hint" id="emailHint">Used to match your attempts and keep your certificate safe. Not shown on the certificate.</div>
+      </div>
+      <div class="field" id="f-consent">
+        <label class="consent"><input type="checkbox" id="consent" required><span>I agree that Ivy Professional School may store my name, email and responses to issue and verify my certificate and to report anonymised workshop results to the organiser.</span></label>
+      </div>
+      <div class="alert alert-error" id="detailsError" hidden></div>
+      <button class="btn btn-primary btn-block" type="submit" id="detailsNext">Start the assessment</button>
+    </form>
+  </section>
+
+  <!-- Question -->
+  <section data-view="quiz" hidden>
+    <form class="card" id="quizForm" novalidate>
+      <div class="q-count" id="qCount"></div>
+      <div class="eyebrow" id="qTopic"></div>
+      <h2 class="q-text" id="qText" tabindex="-1"></h2>
+      <fieldset class="choices" id="qChoices"><legend class="sr-only" id="qLegend"></legend></fieldset>
+      <div class="alert alert-error" id="quizError" hidden style="margin-top:14px"></div>
+      <div class="actions split" style="margin-top:20px">
+        <button class="btn btn-ghost" type="button" id="qBack">Back</button>
+        <button class="btn btn-primary" type="submit" id="qNext">Next</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Feedback and submit -->
+  <section data-view="feedback" hidden>
+    <form class="card" id="feedbackForm" novalidate>
+      <div class="eyebrow">Last step</div>
+      <h2>Quick feedback</h2>
+      <div class="field" id="f-rating">
+        <span class="label" id="ratingLabel">How useful was this workshop for your work?</span>
+        <div class="scale" role="radiogroup" aria-labelledby="ratingLabel">
+          <label><input type="radio" name="rating" value="1"><span>1</span></label>
+          <label><input type="radio" name="rating" value="2"><span>2</span></label>
+          <label><input type="radio" name="rating" value="3"><span>3</span></label>
+          <label><input type="radio" name="rating" value="4"><span>4</span></label>
+          <label><input type="radio" name="rating" value="5"><span>5</span></label>
+        </div>
+        <div class="scale-legend"><span>Not useful</span><span>Very useful</span></div>
+      </div>
+      <div class="field">
+        <label for="takeaway">One thing you will apply at work <span class="muted">(optional)</span></label>
+        <textarea id="takeaway" maxlength="280" placeholder="e.g. Using structured prompts to draft client emails faster"></textarea>
+        <div class="hint">If you share your certificate on LinkedIn, we can add this line to your post.</div>
+      </div>
+      <div class="field">
+        <label class="consent"><input type="checkbox" id="optIn"><span>Yes, send me occasional updates about Ivy Professional School's AI and data science programs. You can unsubscribe at any time.</span></label>
+      </div>
+      <div class="alert alert-error" id="submitError" hidden></div>
+      <div class="actions split">
+        <button class="btn btn-ghost" type="button" id="fbBack">Back</button>
+        <button class="btn btn-amber" type="submit" id="submitBtn">Submit and get my certificate</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Below pass mark, retry allowed -->
+  <section data-view="retry" hidden>
+    <div class="card">
+      <div class="result-score"><div class="score-ring" id="retryRing"><span id="retryPct"></span></div>
+        <div><h2 style="margin:0">Almost there</h2><p class="muted" style="margin:0" id="retryText"></p></div></div>
+      <p>Take a minute to recall what was covered, then try again. Questions appear in a new order.</p>
+      <button class="btn btn-primary" id="retryBtn">Try again</button>
+    </div>
+  </section>
+
+  <!-- Certificate issued -->
+  <section data-view="certificate" hidden>
+    <div class="card">
+      <div class="check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#092f55" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L19 7"/></svg></div>
+      <h2 id="certHeading"></h2>
+      <p class="muted" id="certSub"></p>
+      <div class="tabs" role="tablist" aria-label="Certificate format">
+        <button role="tab" aria-selected="true" id="tabCert" data-tab="cert">Certificate</button>
+        <button role="tab" aria-selected="false" id="tabBadge" data-tab="badge">Badge</button>
+      </div>
+      <div class="cert-frame" id="certFrame"><div class="spinner"></div></div>
+      <div class="action-grid">
+        <button class="btn btn-linkedin wide" id="shareLinkedIn"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 110-4.13 2.06 2.06 0 010 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>Share on LinkedIn</button>
+        <a class="btn btn-ghost" id="addToProfile" target="_blank" rel="noopener">Add to LinkedIn profile</a>
+        <button class="btn btn-ghost" id="copyLink">Copy certificate link</button>
+        <button class="btn btn-primary" id="dlPng">Download image (PNG)</button>
+        <button class="btn btn-primary" id="dlPdf">Download PDF</button>
+      </div>
+      <details class="share-box" style="margin-top:18px">
+        <summary style="cursor:pointer;font-weight:600;color:var(--deep)">Edit your LinkedIn post text</summary>
+        <div class="field" style="margin-top:12px">
+          <label for="shareText" class="sr-only">LinkedIn post text</label>
+          <textarea id="shareText"></textarea>
+          <div class="hint">On a phone, Share opens the LinkedIn app with your certificate attached. On a computer, we copy this text, download your certificate image and open LinkedIn: paste the text and add the image.</div>
+        </div>
+        <button class="btn btn-ghost" id="copyPost">Copy post text</button>
+      </details>
+    </div>
+    <div data-promo="participant"></div>
+  </section>
+
+  <!-- Public verification -->
+  <section data-view="verify" hidden>
+    <div class="card">
+      <div class="verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L19 7"/></svg>VERIFIED BY IVY PROFESSIONAL SCHOOL</div>
+      <div class="cert-frame" id="verifyFrame"><div class="spinner"></div></div>
+      <dl class="facts" id="verifyFacts"></dl>
+      <div class="actions" style="margin-top:18px">
+        <button class="btn btn-primary" id="vDlPng">Download PNG</button>
+        <button class="btn btn-ghost" id="vDlPdf">Download PDF</button>
+      </div>
+    </div>
+    <div data-promo="viewer"></div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  &copy; <span id="year"></span> Ivy Professional School (Ivy Knowledge Services Pvt Ltd). Certificates are issued and verified at this address.
+  <br><a href="./">Verify a certificate</a>
+</footer>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="config.js"></script>
+<script src="vendor/qrcode-generator-1.4.4.js"></script>
+<script src="vendor/jspdf-2.5.1.umd.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/certificate.js"></script>
+<script>
+(function () {
+  'use strict';
+  var U = IvyUtil, cfg = U.cfg, api = IvyApi, Cert = IvyCert;
+  var $ = function (id) { return document.getElementById(id); };
+  var NAME_RE = /^[\p{L}\p{M}][\p{L}\p{M} .'’-]{1,79}$/u;
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  var S = {
+    code: '', workshop: null, questions: [], order: [], optOrder: {}, idx: 0, answers: {},
+    name: '', email: '', consent: false, rating: null, takeaway: '', optIn: false,
+    cert: null, result: null, certCanvas: null, badgeCanvas: null, certBlob: null, tab: 'cert', submitting: false
+  };
+
+  $('year').textContent = new Date().getFullYear();
+  if (api.isDemo) $('demoBanner').hidden = false;
+  $('logoLink').href = U.utm(cfg.IVY_WEBSITE, 'certificate_page_logo');
+
+  /* ---------- view + storage helpers ---------- */
+  function show(view) {
+    document.querySelectorAll('[data-view]').forEach(function (s) { s.hidden = s.getAttribute('data-view') !== view; });
+    window.scrollTo(0, 0);
+  }
+  function store(kind) { try { return kind === 'local' ? window.localStorage : window.sessionStorage; } catch (e) { return null; } }
+  function getJson(kind, key) { var s = store(kind); if (!s) return null; try { return JSON.parse(s.getItem(key)); } catch (e) { return null; } }
+  function setJson(kind, key, v) { var s = store(kind); if (!s) return; try { s.setItem(key, JSON.stringify(v)); } catch (e) { /* ignore */ } }
+  function del(kind, key) { var s = store(kind); if (!s) return; try { s.removeItem(key); } catch (e) { /* ignore */ } }
+  function sessKey() { return 'ivy-assess-' + S.code; }
+  function certKey() { return 'ivy-cert-' + S.code; }
+  function saveSession() {
+    setJson('session', sessKey(), { order: S.order, optOrder: S.optOrder, idx: S.idx, answers: S.answers, name: S.name, email: S.email, consent: S.consent });
+  }
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast._t); toast._t = setTimeout(function () { t.hidden = true; }, 6000);
+  }
+  function message(title, body, retry) {
+    $('msgTitle').textContent = title; $('msgBody').textContent = body;
+    $('msgRetry').hidden = !retry; $('msgRetry').onclick = retry || null;
+    $('progress').hidden = true;
+    show('message');
+  }
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function firstName(n) { return String(n || '').split(' ')[0]; }
+  function setProgress(fraction) {
+    $('progress').hidden = false;
+    $('progressFill').style.width = Math.max(0, Math.min(1, fraction)) * 100 + '%';
+  }
+
+  /* ---------- hero ---------- */
+  function heroForWorkshop(w) {
+    $('heroTag').textContent = 'Post-training assessment';
+    $('heroTitle').textContent = w.programName;
+    var bits = [];
+    if (w.clientName) bits.push(w.clientName);
+    bits.push(U.formatDate(w.date));
+    if (w.trainer) bits.push('Trainer: ' + w.trainer);
+    $('heroSub').textContent = bits.join('  ·  ');
+    var m = $('heroMeta');
+    var minutes = w.hasAssessment ? Math.max(3, Math.ceil(w.questionCount * 0.5) + 1) : 2;
+    m.innerHTML = w.hasAssessment
+      ? '<div><b>' + w.questionCount + '</b><span>questions</span></div><div><b>' + minutes + '</b><span>minutes</span></div><div><b>' + w.passMark + '%</b><span>to pass</span></div>'
+      : '<div><b>' + minutes + '</b><span>minutes</span></div><div><b>1</b><span>short form</span></div><div><b>PNG+PDF</b><span>certificate</span></div>';
+    m.hidden = false;
+    document.title = w.programName + ' | Ivy assessment';
+  }
+
+  /* ---------- promo band ---------- */
+  function renderPromo(el, kind, campaign) {
+    var proof = (cfg.PROOF_POINTS || []).map(function (p) { return '<div><b>' + U.esc(p.value) + '</b><span>' + U.esc(p.label) + '</span></div>'; }).join('');
+    var head = kind === 'viewer'
+      ? '<div class="eyebrow">About the issuer</div><h3>Ivy Professional School</h3><div class="amber-rule"></div><p class="muted">Practical training in AI, data science and analytics for working professionals and enterprise teams, since 2008.</p>'
+      : '<div class="eyebrow">Keep going</div><h3>Build on what you learnt today</h3><div class="amber-rule"></div><p class="muted">Ivy Professional School runs hands-on programs in AI, data science and analytics for working professionals, and in-house AI programs for teams.</p>';
+    var btns = kind === 'viewer'
+      ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="' + U.esc(U.utm(cfg.IVY_WEBSITE, 'cert_verify', campaign)) + '">Explore Ivy programs</a>'
+        + '<a class="btn btn-ghost" target="_blank" rel="noopener" href="' + U.esc(U.utm(cfg.ENTERPRISE_URL, 'cert_verify_enterprise', campaign)) + '">Train your team with Ivy</a>'
+      : '<a class="btn btn-primary" target="_blank" rel="noopener" href="' + U.esc(U.utm(cfg.IVY_WEBSITE, 'cert_participant', campaign)) + '">Explore Ivy programs</a>'
+        + '<a class="btn btn-ghost" target="_blank" rel="noopener" href="' + U.esc(U.utm(cfg.ENTERPRISE_URL, 'cert_participant_enterprise', campaign)) + '">Bring this workshop to your team</a>';
+    el.innerHTML = '<div class="promo"><div class="promo-head">' + head + '</div><div class="proof">' + proof + '</div><div class="promo-foot">' + btns + '</div></div>';
+  }
+
+  /* ---------- landing ---------- */
+  function landing() {
+    $('progress').hidden = true;
+    show('landing');
+    $('codeForm').onsubmit = function (e) {
+      e.preventDefault();
+      var c = $('codeInput').value.trim().toUpperCase();
+      if (!/^[A-Z0-9]{4,10}$/.test(c)) { $('codeInput').focus(); toast('Please enter the code shown by your trainer.'); return; }
+      location.search = '?w=' + encodeURIComponent(c);
+    };
+    $('verifyForm').onsubmit = function (e) {
+      e.preventDefault();
+      var c = $('verifyInput').value.trim().toUpperCase();
+      if (!c) { $('verifyInput').focus(); return; }
+      location.search = '?c=' + encodeURIComponent(c);
+    };
+  }
+
+  /* ---------- workshop flow ---------- */
+  function startWorkshop(code) {
+    S.code = code.toUpperCase();
+    var cached = getJson('local', certKey());
+    show('loading');
+    api.getWorkshop(S.code).then(function (res) {
+      if (!res.ok) {
+        if (res.code === 'network') return message('Connection problem', res.error, function () { startWorkshop(code); });
+        return message('Workshop not available', res.error);
+      }
+      S.workshop = res.workshop;
+      heroForWorkshop(S.workshop);
+      if (cached && cached.certificate) {
+        S.cert = cached.certificate; S.result = cached.result || null; S.takeaway = cached.takeaway || '';
+        return showCertificate(true);
+      }
+      if (!S.workshop.open) return message('This assessment is closed', S.workshop.closedReason);
+      S.questions = res.questions || [];
+      var sess = getJson('session', sessKey());
+      var ids = S.questions.map(function (q) { return q.id; });
+      if (sess && sess.order && sess.order.length === ids.length && sess.order.every(function (id) { return ids.indexOf(id) > -1; })) {
+        S.order = sess.order; S.optOrder = sess.optOrder || {}; S.answers = sess.answers || {}; S.idx = sess.idx || 0;
+        S.name = sess.name || ''; S.email = sess.email || ''; S.consent = !!sess.consent;
+      } else {
+        newOrder();
+      }
+      showDetails();
+    });
+  }
+
+  function newOrder() {
+    S.order = shuffle(S.questions.map(function (q) { return q.id; }));
+    S.optOrder = {};
+    S.questions.forEach(function (q) { S.optOrder[q.id] = shuffle(q.options.map(function (_, i) { return i; })); });
+    S.answers = {}; S.idx = 0;
+  }
+
+  function qById(id) { for (var i = 0; i < S.questions.length; i++) if (S.questions[i].id === id) return S.questions[i]; return null; }
+  function totalSteps() { return S.questions.length + 2; }
+
+  /* details */
+  function showDetails() {
+    var w = S.workshop;
+    $('detailsIntro').textContent = w.hasAssessment
+      ? w.questionCount + ' multiple-choice questions. Score ' + w.passMark + '% or more for a Certificate of Achievement.' + (w.maxAttempts > 1 ? ' You get ' + w.maxAttempts + ' attempts.' : '')
+      : 'A short feedback form, then your Certificate of Participation.';
+    $('detailsNext').textContent = w.hasAssessment ? 'Start the assessment' : 'Continue';
+    $('name').value = S.name; $('email').value = S.email; $('consent').checked = S.consent;
+    updateNamePreview();
+    setProgress(0);
+    show('details');
+  }
+  function updateNamePreview() {
+    var v = $('name').value.replace(/\s+/g, ' ').trim();
+    $('namePreview').hidden = v.length < 2;
+    $('namePreviewText').textContent = v;
+  }
+  $('name').addEventListener('input', updateNamePreview);
+  function fieldError(id, msg) {
+    var f = $(id); f.classList.toggle('invalid', !!msg);
+    var e = f.querySelector('.field-error');
+    if (msg) { if (!e) { e = document.createElement('div'); e.className = 'field-error'; f.appendChild(e); } e.textContent = msg; }
+    else if (e) e.remove();
+  }
+  $('detailsForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = $('name').value.replace(/\s+/g, ' ').trim();
+    var email = $('email').value.trim().toLowerCase();
+    var ok = true, first = null;
+    if (!NAME_RE.test(name)) { fieldError('f-name', 'Please enter your full name using letters only.'); ok = false; first = first || $('name'); } else fieldError('f-name');
+    if (!EMAIL_RE.test(email)) { fieldError('f-email', 'Please enter a valid email address.'); ok = false; first = first || $('email'); } else fieldError('f-email');
+    if (!$('consent').checked) { fieldError('f-consent', 'Please tick this box to continue.'); ok = false; first = first || $('consent'); } else fieldError('f-consent');
+    if (!ok) { first.focus(); return; }
+    if (name === name.toLowerCase() || name === name.toUpperCase()) {
+      if (!confirm('Your name will appear on the certificate exactly as:\n\n' + name + '\n\nContinue with this spelling and capitalisation?')) { $('name').focus(); return; }
+    }
+    S.name = name; S.email = email; S.consent = true;
+    saveSession();
+    if (S.workshop.hasAssessment) { S.idx = Math.min(S.idx, S.order.length - 1); showQuestion(); }
+    else showFeedback();
+  });
+
+  /* questions */
+  function showQuestion() {
+    var q = qById(S.order[S.idx]);
+    var n = S.order.length;
+    $('qCount').textContent = 'Question ' + (S.idx + 1) + ' of ' + n;
+    $('qTopic').textContent = q.topic || '';
+    $('qText').textContent = q.text;
+    $('qLegend').textContent = q.text;
+    var box = $('qChoices');
+    box.querySelectorAll('.choice').forEach(function (c) { c.remove(); });
+    S.optOrder[q.id].forEach(function (orig, pos) {
+      var label = document.createElement('label');
+      label.className = 'choice';
+      var input = document.createElement('input');
+      input.type = 'radio'; input.name = 'q'; input.value = String(orig);
+      if (S.answers[q.id] === orig) input.checked = true;
+      input.addEventListener('change', function () { S.answers[q.id] = orig; $('quizError').hidden = true; saveSession(); updateQuizProgress(); });
+      var b = document.createElement('span'); b.className = 'box';
+      var dot = document.createElement('span'); dot.className = 'dot'; dot.textContent = 'ABCD'.charAt(pos); dot.setAttribute('aria-hidden', 'true');
+      var txt = document.createElement('span'); txt.textContent = q.options[orig];
+      b.appendChild(dot); b.appendChild(txt); label.appendChild(input); label.appendChild(b);
+      box.appendChild(label);
+    });
+    $('qNext').textContent = S.idx === n - 1 ? 'Continue' : 'Next';
+    $('quizError').hidden = true;
+    updateQuizProgress();
+    show('quiz');
+    $('qText').focus({ preventScroll: true });
+  }
+  function updateQuizProgress() { setProgress((1 + Object.keys(S.answers).length) / totalSteps()); }
+  $('quizForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var id = S.order[S.idx];
+    if (S.answers[id] === undefined) { $('quizError').textContent = 'Please choose an answer to continue.'; $('quizError').hidden = false; return; }
+    if (S.idx < S.order.length - 1) { S.idx++; saveSession(); showQuestion(); }
+    else showFeedback();
+  });
+  $('qBack').addEventListener('click', function () {
+    if (S.idx === 0) return showDetails();
+    S.idx--; saveSession(); showQuestion();
+  });
+
+  /* feedback + submit */
+  function showFeedback() {
+    setProgress((totalSteps() - 1) / totalSteps());
+    $('submitError').hidden = true;
+    show('feedback');
+  }
+  $('fbBack').addEventListener('click', function () {
+    if (S.workshop.hasAssessment) { S.idx = S.order.length - 1; showQuestion(); } else showDetails();
+  });
+  $('feedbackForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (S.submitting) return;
+    var r = document.querySelector('input[name=rating]:checked');
+    if (!r) { fieldError('f-rating', 'Please choose a rating from 1 to 5.'); document.querySelector('input[name=rating]').focus(); return; }
+    fieldError('f-rating');
+    var missing = S.order.filter(function (id) { return S.answers[id] === undefined; });
+    if (missing.length) { S.idx = S.order.indexOf(missing[0]); showQuestion(); $('quizError').textContent = 'Please answer this question.'; $('quizError').hidden = false; return; }
+    S.rating = Number(r.value);
+    S.takeaway = $('takeaway').value.trim();
+    S.optIn = $('optIn').checked;
+    S.submitting = true;
+    var btn = $('submitBtn'); btn.disabled = true; btn.textContent = 'Submitting...';
+    $('submitError').hidden = true;
+    api.submit({
+      code: S.code, name: S.name, email: S.email, consent: true, answers: S.answers,
+      rating: S.rating, takeaway: S.takeaway, optIn: S.optIn
+    }).then(function (res) {
+      S.submitting = false; btn.disabled = false; btn.textContent = 'Submit and get my certificate';
+      if (!res.ok) { $('submitError').textContent = res.error; $('submitError').hidden = false; return; }
+      S.result = res.result || null;
+      if (res.certificate) {
+        S.cert = res.certificate;
+        setJson('local', certKey(), { certificate: S.cert, result: S.result, takeaway: S.takeaway });
+        del('session', sessKey());
+        showCertificate(false, res.alreadyIssued);
+      } else if (S.result && S.result.outcome === 'retry') {
+        showRetry();
+      } else {
+        $('submitError').textContent = 'Unexpected response. Please try again.'; $('submitError').hidden = false;
+      }
+    });
+  });
+
+  function showRetry() {
+    var r = S.result;
+    $('retryPct').textContent = r.percent + '%';
+    $('retryRing').style.setProperty('--p', r.percent);
+    $('retryText').textContent = 'You scored ' + r.percent + '%. The pass mark is ' + r.passMark + '%. You have ' + r.attemptsLeft + ' more attempt' + (r.attemptsLeft === 1 ? '' : 's') + '.';
+    setProgress(1);
+    show('retry');
+  }
+  $('retryBtn').addEventListener('click', function () { newOrder(); saveSession(); showQuestion(); });
+
+  /* ---------- certificate ---------- */
+  function showCertificate(fromCache, alreadyIssued) {
+    var c = S.cert, r = S.result || {};
+    $('progress').hidden = true;
+    var fn = firstName(c.name);
+    if (c.type === 'achievement') {
+      $('certHeading').textContent = 'Well done, ' + fn + '. You passed.';
+      $('certSub').textContent = (r.percent !== undefined && r.percent !== '' ? 'You scored ' + r.percent + '%. ' : '') + 'Your Certificate of Achievement is ready to download and share.';
+    } else {
+      $('certHeading').textContent = 'Thank you for attending, ' + fn + '.';
+      $('certSub').textContent = (r.hasAssessment && r.percent !== undefined ? 'You scored ' + r.percent + '% (pass mark ' + r.passMark + '%). ' : '') + 'Your Certificate of Participation is ready to download and share.';
+    }
+    if (fromCache || alreadyIssued) $('certSub').textContent = 'You already have a certificate for this workshop. ' + $('certSub').textContent.replace(/^You scored[^.]*\.\s*(\([^)]*\)\.\s*)?/, '');
+    $('addToProfile').href = Cert.linkedinAddUrl(c);
+    $('shareText').value = Cert.shareText(c, S.takeaway);
+    renderPromo(document.querySelector('[data-promo=participant]'), 'participant', S.code);
+    show('certificate');
+    S.tab = 'cert';
+    setTab('cert');
+    Cert.renderCertificate(c).then(function (cv) {
+      S.certCanvas = cv;
+      paintFrame();
+      return Cert.canvasBlob(cv);
+    }).then(function (b) { S.certBlob = b; });
+    Cert.renderBadge(c).then(function (cv) { S.badgeCanvas = cv; paintFrame(); });
+  }
+  function paintFrame() {
+    var cv = S.tab === 'cert' ? S.certCanvas : S.badgeCanvas;
+    var f = $('certFrame');
+    f.classList.toggle('badge', S.tab === 'badge');
+    if (!cv) { f.innerHTML = '<div class="spinner"></div>'; return; }
+    f.innerHTML = '';
+    var img = new Image();
+    img.src = cv.toDataURL('image/png');
+    img.alt = (S.tab === 'cert' ? 'Certificate' : 'Badge') + ' for ' + S.cert.name + ', ' + S.cert.programName;
+    f.appendChild(img);
+    $('dlPng').textContent = S.tab === 'cert' ? 'Download image (PNG)' : 'Download badge (PNG)';
+    $('dlPdf').hidden = S.tab !== 'cert';
+  }
+  function setTab(t) {
+    S.tab = t;
+    $('tabCert').setAttribute('aria-selected', String(t === 'cert'));
+    $('tabBadge').setAttribute('aria-selected', String(t === 'badge'));
+    paintFrame();
+  }
+  $('tabCert').addEventListener('click', function () { setTab('cert'); });
+  $('tabBadge').addEventListener('click', function () { setTab('badge'); });
+
+  $('dlPng').addEventListener('click', function () {
+    var cv = S.tab === 'cert' ? S.certCanvas : S.badgeCanvas;
+    if (!cv) return;
+    Cert.downloadPng(cv, Cert.fileBase(S.cert) + (S.tab === 'badge' ? '-badge' : '') + '.png');
+  });
+  $('dlPdf').addEventListener('click', function () {
+    if (!S.certCanvas) return;
+    Cert.downloadPdf(S.certCanvas, Cert.fileBase(S.cert) + '.pdf').catch(function () { toast('PDF could not be created. Please download the PNG instead.'); });
+  });
+  $('copyLink').addEventListener('click', function () {
+    Cert.copyText(U.verifyUrl(S.cert.id)).then(function (ok) { toast(ok ? 'Certificate link copied.' : U.verifyUrl(S.cert.id)); });
+  });
+  $('copyPost').addEventListener('click', function () {
+    Cert.copyText($('shareText').value).then(function (ok) { toast(ok ? 'Post text copied.' : 'Select the text and copy it manually.'); });
+  });
+
+  var touch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  $('shareLinkedIn').addEventListener('click', function () {
+    var text = $('shareText').value;
+    var fname = Cert.fileBase(S.cert) + '.png';
+    if (touch && S.certBlob && window.File && navigator.canShare) {
+      var file = new File([S.certBlob], fname, { type: 'image/png' });
+      if (navigator.canShare({ files: [file] })) {
+        Cert.copyText(text);
+        navigator.share({ files: [file], text: text, title: 'My Ivy Professional School certificate' })
+          .then(function () { toast('Shared. If the text did not carry over, paste it: we copied it for you.'); })
+          .catch(function (err) { if (err && err.name !== 'AbortError') openLinkedInDesktop(text, fname); });
+        return;
+      }
+    }
+    openLinkedInDesktop(text, fname);
+  });
+  function openLinkedInDesktop(text, fname) {
+    Cert.copyText(text);
+    if (S.certBlob) Cert.saveBlob(S.certBlob, fname);
+    window.open(Cert.linkedinPostUrl(text), '_blank', 'noopener');
+    toast('Post text copied and certificate image downloaded. In LinkedIn, paste the text if needed and add the image.');
+  }
+
+  /* ---------- verification ---------- */
+  function startVerify(id) {
+    $('heroTag').textContent = 'Certificate verification';
+    $('heroTitle').textContent = 'Checking certificate';
+    $('heroSub').textContent = id;
+    show('loading');
+    api.verify(id).then(function (res) {
+      if (!res.ok) {
+        $('heroTitle').textContent = 'Certificate not found';
+        if (res.code === 'network') return message('Connection problem', res.error, function () { startVerify(id); });
+        return message('We could not verify this certificate', res.error + ' Check the ID on the certificate, or contact Ivy Professional School.');
+      }
+      var c = res.certificate;
+      S.cert = c;
+      $('heroTitle').textContent = c.programName;
+      $('heroSub').textContent = (c.type === 'achievement' ? 'Certificate of Achievement' : 'Certificate of Participation') + ' issued to ' + c.name;
+      document.title = c.name + ' | Verified Ivy certificate';
+      var rows = [
+        ['Issued to', c.name],
+        ['Program', c.programName],
+        ['Certificate', c.type === 'achievement' ? 'Achievement (passed the post-training assessment)' : 'Participation'],
+        ['Workshop date', U.formatDate(c.date)]
+      ];
+      if (c.clientName) rows.push(['Delivered for', c.clientName]);
+      if (c.duration) rows.push(['Duration', c.duration]);
+      if (c.trainer) rows.push(['Trainer', c.trainer]);
+      rows.push(['Certificate ID', c.id], ['Issued on', U.formatDate(c.issuedAt)]);
+      $('verifyFacts').innerHTML = rows.map(function (r) { return '<dt>' + U.esc(r[0]) + '</dt><dd>' + U.esc(r[1]) + '</dd>'; }).join('');
+      renderPromo(document.querySelector('[data-promo=viewer]'), 'viewer', 'verify');
+      show('verify');
+      Cert.renderCertificate(c).then(function (cv) {
+        S.certCanvas = cv;
+        var f = $('verifyFrame'); f.innerHTML = '';
+        var img = new Image(); img.src = cv.toDataURL('image/png'); img.alt = 'Certificate for ' + c.name + ', ' + c.programName;
+        f.appendChild(img);
+      });
+    });
+  }
+  $('vDlPng').addEventListener('click', function () { if (S.certCanvas) Cert.downloadPng(S.certCanvas, Cert.fileBase(S.cert) + '.png'); });
+  $('vDlPdf').addEventListener('click', function () { if (S.certCanvas) Cert.downloadPdf(S.certCanvas, Cert.fileBase(S.cert) + '.pdf'); });
+
+  /* ---------- boot ---------- */
+  var params = new URLSearchParams(location.search);
+  var w = (params.get('w') || '').trim();
+  var c = (params.get('c') || '').trim();
+  if (c) startVerify(c.toUpperCase());
+  else if (w) startWorkshop(w);
+  else landing();
+})();
+</script>
+</body>
+</html>
